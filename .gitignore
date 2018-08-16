@@ -1,0 +1,20 @@
+## Build
+CMakeCache.txt
+CMakeFiles
+cmake-build-debug
+cmake_install.cmake
+
+Makefile
+room
+
+## IDEs
+.idea
+
+## OS
+.DS_Store
+
+## Misc
+notes
+
+
+
