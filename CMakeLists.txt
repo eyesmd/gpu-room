@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.11.0)
 project (graphics-computing)
 
 # Target
-add_executable(room room.cpp glad.c)
+add_executable(room room.cpp glad.c error.cpp error.h room.h)
 
 # GLFW
 find_package(PkgConfig REQUIRED)
