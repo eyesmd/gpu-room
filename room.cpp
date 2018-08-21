@@ -11,34 +11,32 @@ GLFWwindow * window;
 unsigned int VAO;
 unsigned int shaderProgram;
 
-void setVertexProgram(void) {
-    // Vertex Shader
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+unsigned int createShader(unsigned int shaderType, const char * shaderName, const char * shaderSource) {
+    unsigned int shader = glCreateShader(shaderType);
+    glShaderSource(shader, 1, &shaderSource, NULL);
+    glCompileShader(shader);
+    handleShaderCompilationError(shader, shaderName);
+    return shader;
+}
 
+void setShaderProgram(void) {
+    // Vertex Shader
     const char *vertexShaderSource = "#version 330 core\n"
                                      "layout (location = 0) in vec3 aPos;\n"
                                      "void main()\n"
                                      "{\n"
                                      "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
                                      "}\0";
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-
-    glCompileShader(vertexShader);
-    handleShaderCompilationError(vertexShader, "VERTEX");
+    unsigned int vertexShader = createShader(GL_VERTEX_SHADER, "VERTEX", vertexShaderSource);
 
     // Fragment Shader
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
     const char *fragmentShaderSource = "#version 330 core\n"
                                        "out vec4 FragColor;\n"
                                        "void main()\n"
                                        "{\n"
                                        "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
                                        "}\n\0";
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-
-    glCompileShader(fragmentShader);
-    handleShaderCompilationError(fragmentShader, "FRAGMENT");
+    unsigned int fragmentShader = createShader(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentShaderSource);
 
     // Shader program
     shaderProgram = glCreateProgram();
@@ -85,7 +83,7 @@ void setup(void) {
     glViewport(0, 0, 800, 600);
 
     // Shaders
-    setVertexProgram();
+    setShaderProgram();
     glUseProgram(shaderProgram);
 
     // VAO
