@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 
 #include "room.h"
 #include "error.h"
@@ -99,6 +100,18 @@ void render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // state-set
     glClear(GL_COLOR_BUFFER_BIT); // execute
 
+    // Set uniforms
+    float timeValue = (float) glfwGetTime();
+    float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+    int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+    if (vertexColorLocation == -1) {
+        std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
+        glfwSetWindowShouldClose(window, true);
+    }
+
+    glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+    // Draw
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
