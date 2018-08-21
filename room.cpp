@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <fstream>
+#include <sstream>
 
 #include "room.h"
 #include "error.h"
@@ -11,42 +13,44 @@ GLFWwindow * window;
 unsigned int VAO;
 unsigned int shaderProgram;
 
-unsigned int createShader(unsigned int shaderType, const char * shaderName, const char * shaderSource) {
+unsigned int createShader(unsigned int shaderType, const char * shaderName, const char * shaderPath) {
+    std::string shaderSource;
+    std::ifstream shaderFile;
+
+    shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    try {
+        shaderFile.open(shaderPath);
+        std::stringstream shaderStream;
+        shaderStream << shaderFile.rdbuf();
+        shaderFile.close();
+        shaderSource = shaderStream.str();
+    } catch(std::ifstream::failure& e) {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+    }
+
+    const char * shaderSourcePointer = shaderSource.c_str();
+
     unsigned int shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &shaderSource, NULL);
+    glShaderSource(shader, 1, &shaderSourcePointer, NULL);
     glCompileShader(shader);
     handleShaderCompilationError(shader, shaderName);
     return shader;
 }
 
 void setShaderProgram(void) {
-    // Vertex Shader
-    const char *vertexShaderSource = "#version 330 core\n"
-                                     "layout (location = 0) in vec3 aPos;\n"
-                                     "void main()\n"
-                                     "{\n"
-                                     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                     "}\0";
-    unsigned int vertexShader = createShader(GL_VERTEX_SHADER, "VERTEX", vertexShaderSource);
-
-    // Fragment Shader
-    const char *fragmentShaderSource = "#version 330 core\n"
-                                       "out vec4 FragColor;\n"
-                                       "void main()\n"
-                                       "{\n"
-                                       "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                       "}\n\0";
-    unsigned int fragmentShader = createShader(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentShaderSource);
+    // Load shaders
+    unsigned int vertexShader = createShader(GL_VERTEX_SHADER, "VERTEX", "./vertex.glsl");
+    unsigned int fragmentShader = createShader(GL_FRAGMENT_SHADER, "FRAGMENT", "fragment.glsl");
 
     // Shader program
     shaderProgram = glCreateProgram();
-
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
     handleShaderLinkageError(shaderProgram);
 
-    // Shader cleanup
+    // Cleanup
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 }
@@ -107,7 +111,7 @@ void processInput() {
 int main() {
     glfwInit();
 
-    GLFWerrorfun errorCb = glfwSetErrorCallback(handleGenericError);
+    glfwSetErrorCallback(handleGenericError);
     
     // My GPU complies up to the 4.1 version
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // Fails if version is less
