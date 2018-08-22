@@ -8,9 +8,14 @@
 
 #include "room.h"
 #include "error.h"
+#include "stb_image.h"
+
+#include "Texture.h"
 
 GLFWwindow * window;
 
+Texture * textureBox;
+Texture * textureSmile;
 unsigned int VAO;
 unsigned int shaderProgram;
 
@@ -56,17 +61,19 @@ void setShaderProgram(void) {
     glDeleteShader(fragmentShader);
 }
 
-void setVAO(void) {
+
+void setVAO() {
     // Vertex Array Object
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO); // single target for VAO
 
     // Vertex Stream
     float vertices[] = {
-            // positions         // colors
-            0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-            -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-            0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
+            // positions          // colors           // texture coords
+            0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+            0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
     };
 
     // Vertex Attributes
@@ -78,24 +85,48 @@ void setVAO(void) {
 
     //  Vertex Attributes Pointers
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // over buffer bound to GL_ARRAY_BUFFER
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // over buffer bound to GL_ARRAY_BUFFER
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // over buffer bound to GL_ARRAY_BUFFER
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // over buffer bound to GL_ARRAY_BUFFER
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); // over buffer bound to GL_ARRAY_BUFFER
 
-    //  Unbind
+    // Element Object Buffer
+    unsigned int indices[] = {  // note that we start from 0!
+            0, 1, 3,   // first triangle
+            1, 2, 3    // second triangle
+    };
+
+    unsigned int EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // Unbind
+    glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void setup(void) {
+void setTextures() {
+    textureBox = new Texture("container.jpg");
+    textureBox -> mapToTexUnit(0);
+    textureSmile = new Texture("awesomeface.png");
+    textureSmile -> mapToTexUnit(1);
+}
+
+void setup() {
     // Viewport
     glViewport(0, 0, 800, 600);
 
     // Shaders
     setShaderProgram();
-    glUseProgram(shaderProgram);
 
     // VAO
     setVAO();
+
+    // Texture
+    setTextures();
 }
 
 void render() {
@@ -103,19 +134,41 @@ void render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // state-set
     glClear(GL_COLOR_BUFFER_BIT); // execute
 
+    // Set drawing context
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureBox->id);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, textureSmile->id);
+
     // Set uniforms
     float timeValue = (float) glfwGetTime();
     float value = sin(timeValue) / 2.0f;
-    int vertexColorLocation = glGetUniformLocation(shaderProgram, "horizontalOffset");
-    if (vertexColorLocation == -1) {
+    int horizontalOffsetLocation = glGetUniformLocation(shaderProgram, "horizontalOffset");
+    if (horizontalOffsetLocation == -1) {
         std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
         glfwSetWindowShouldClose(window, true);
     }
+    glUniform1f(horizontalOffsetLocation, value);
 
-    glUniform1f(vertexColorLocation, value);
+    int boxSamplerLocation = glGetUniformLocation(shaderProgram, "boxSampler");
+    if (boxSamplerLocation == -1) {
+        std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
+        glfwSetWindowShouldClose(window, true);
+    }
+    glUniform1i(boxSamplerLocation, 0);
+
+    int smileSamplerLocation = glGetUniformLocation(shaderProgram, "smileSampler");
+    if (smileSamplerLocation == -1) {
+        std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
+        glfwSetWindowShouldClose(window, true);
+    }
+    glUniform1i(smileSamplerLocation, 1);
 
     // Draw
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
 
@@ -125,6 +178,9 @@ void processInput() {
 }
 
 int main() {
+
+    stbi_set_flip_vertically_on_load(true);
+
     glfwInit();
 
     glfwSetErrorCallback(handleGenericError);
@@ -162,6 +218,8 @@ int main() {
         glfwPollEvents();    
     }
 
+    delete textureBox;
+    delete textureSmile;
     glDeleteVertexArrays(1, &VAO);
     //glDeleteBuffers(1, &VBO);
 
