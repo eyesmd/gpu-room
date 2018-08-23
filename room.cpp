@@ -1,16 +1,21 @@
 #include <iostream>
 #include <stdlib.h>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <fstream>
 #include <sstream>
 #include <cmath>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "room.h"
 #include "error.h"
-#include "stb_image.h"
 
 #include "Texture.h"
+#include "Shader.h"
 
 GLFWwindow * window;
 
@@ -167,6 +172,17 @@ void render() {
     }
     glUniform1i(smileSamplerLocation, 1);
 
+    glm::mat4 trans;
+    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+
+    unsigned int transformLocation = glGetUniformLocation(shaderProgram, "transform");
+    if (transformLocation == -1) {
+        std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
+        glfwSetWindowShouldClose(window, true);
+    }
+    glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(trans));
+
     // Draw
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
@@ -207,7 +223,7 @@ int main() {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
-    }    
+    }
 
     setup();
 
