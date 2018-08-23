@@ -104,17 +104,28 @@ void render() {
     glBindTexture(GL_TEXTURE_2D, textureSmile->id);
 
     // Set uniforms
-    float timeValue = (float) glfwGetTime();
-    float value = sin(timeValue) / 2.0f;
-    shaderProgram->setFloat("horizontalOffset", value);
+
+    //float timeValue = (float) glfwGetTime();
+    //float value = sin(timeValue) / 2.0f;
+    //shaderProgram->setFloat("horizontalOffset", value);
 
     shaderProgram->setInt("boxSampler", 0);
     shaderProgram->setInt("smileSampler", 1);
 
-    glm::mat4 trans;
-    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-    shaderProgram->setMat4("transform", trans);
+    glm::mat4 model;
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // rotate over x-axis
+
+    glm::mat4 view;
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); // move 3.0f opposite to camera
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    glm::mat4 projection;
+    projection = glm::perspective(glm::radians(45.0f), float(width) / float(height), 0.1f, 100.0f);
+
+    shaderProgram->setMat4("model", model);
+    shaderProgram->setMat4("view", view);
+    shaderProgram->setMat4("projection", projection);
 
     // Draw
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
