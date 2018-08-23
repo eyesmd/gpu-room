@@ -22,49 +22,7 @@ GLFWwindow * window;
 Texture * textureBox;
 Texture * textureSmile;
 unsigned int VAO;
-unsigned int shaderProgram;
-
-unsigned int createShader(unsigned int shaderType, const char * shaderName, const char * shaderPath) {
-    std::string shaderSource;
-    std::ifstream shaderFile;
-
-    shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-    try {
-        shaderFile.open(shaderPath);
-        std::stringstream shaderStream;
-        shaderStream << shaderFile.rdbuf();
-        shaderFile.close();
-        shaderSource = shaderStream.str();
-    } catch(std::ifstream::failure& e) {
-        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
-    }
-
-    const char * shaderSourcePointer = shaderSource.c_str();
-
-    unsigned int shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &shaderSourcePointer, NULL);
-    glCompileShader(shader);
-    handleShaderCompilationError(shader, shaderName);
-    return shader;
-}
-
-void setShaderProgram(void) {
-    // Load shaders
-    unsigned int vertexShader = createShader(GL_VERTEX_SHADER, "VERTEX", "./vertex.glsl");
-    unsigned int fragmentShader = createShader(GL_FRAGMENT_SHADER, "FRAGMENT", "fragment.glsl");
-
-    // Shader program
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    handleShaderLinkageError(shaderProgram);
-
-    // Cleanup
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-}
+Shader * shaderProgram;
 
 
 void setVAO() {
@@ -113,25 +71,21 @@ void setVAO() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void setTextures() {
-    textureBox = new Texture("container.jpg");
-    textureBox -> mapToTexUnit(0);
-    textureSmile = new Texture("awesomeface.png");
-    textureSmile -> mapToTexUnit(1);
-}
-
 void setup() {
     // Viewport
     glViewport(0, 0, 800, 600);
 
     // Shaders
-    setShaderProgram();
+    shaderProgram = new Shader("./vertex.glsl", "fragment.glsl");
 
     // VAO
     setVAO();
 
     // Texture
-    setTextures();
+    textureBox = new Texture("container.jpg");
+    textureBox -> mapToTexUnit(0);
+    textureSmile = new Texture("awesomeface.png");
+    textureSmile -> mapToTexUnit(1);
 }
 
 void render() {
@@ -140,7 +94,8 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT); // execute
 
     // Set drawing context
-    glUseProgram(shaderProgram);
+    shaderProgram->use();
+
     glBindVertexArray(VAO);
 
     glActiveTexture(GL_TEXTURE0);
@@ -151,37 +106,15 @@ void render() {
     // Set uniforms
     float timeValue = (float) glfwGetTime();
     float value = sin(timeValue) / 2.0f;
-    int horizontalOffsetLocation = glGetUniformLocation(shaderProgram, "horizontalOffset");
-    if (horizontalOffsetLocation == -1) {
-        std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
-        glfwSetWindowShouldClose(window, true);
-    }
-    glUniform1f(horizontalOffsetLocation, value);
+    shaderProgram->setFloat("horizontalOffset", value);
 
-    int boxSamplerLocation = glGetUniformLocation(shaderProgram, "boxSampler");
-    if (boxSamplerLocation == -1) {
-        std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
-        glfwSetWindowShouldClose(window, true);
-    }
-    glUniform1i(boxSamplerLocation, 0);
-
-    int smileSamplerLocation = glGetUniformLocation(shaderProgram, "smileSampler");
-    if (smileSamplerLocation == -1) {
-        std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
-        glfwSetWindowShouldClose(window, true);
-    }
-    glUniform1i(smileSamplerLocation, 1);
+    shaderProgram->setInt("boxSampler", 0);
+    shaderProgram->setInt("smileSampler", 1);
 
     glm::mat4 trans;
     trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
     trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-
-    unsigned int transformLocation = glGetUniformLocation(shaderProgram, "transform");
-    if (transformLocation == -1) {
-        std::cout << "ERROR::RENDER::UNKNOWN_UNIFORM" << std::endl;
-        glfwSetWindowShouldClose(window, true);
-    }
-    glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(trans));
+    shaderProgram->setMat4("transform", trans);
 
     // Draw
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
