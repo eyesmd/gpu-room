@@ -16,6 +16,7 @@
 
 #include "entities/Texture.h"
 #include "entities/Shader.h"
+#include "entities/BasicCamera.h"
 
 GLFWwindow * window;
 
@@ -24,6 +25,7 @@ Texture * textureSmile;
 unsigned int VAO;
 Shader * shaderProgram;
 
+BasicCamera * camera;
 
 glm::vec3 cubePositions[] = {
         glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -124,6 +126,9 @@ void setup() {
     textureBox -> mapToTexUnit(0);
     textureSmile = new Texture("awesomeface.png");
     textureSmile -> mapToTexUnit(1);
+
+    // Camera
+    camera = new BasicCamera(glm::vec3(0.0f, 0.0f, 5.0f), glm::radians(-90.0f));
 }
 
 void render() {
@@ -150,18 +155,21 @@ void render() {
     shaderProgram->setInt("boxSampler", 0);
     shaderProgram->setInt("smileSampler", 1);
 
+    //basicCamera.rotate(glm::radians(1.0f));
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    glm::mat4 projection;
+    projection = glm::perspective(glm::radians(45.0f), float(width) / float(height), 0.1f, 100.0f);
+
+    //camera->rotate(glm::radians(1.0f));
+    glm::mat4 view = camera->getViewTransform();
+
     for (int i = 0; i < 10; i++) {
+
         glm::mat4 model;
         model = glm::translate(model, cubePositions[i]);
         model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-
-        glm::mat4 view;
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); // move 3.0f opposite to camera
-
-        int width, height;
-        glfwGetWindowSize(window, &width, &height);
-        glm::mat4 projection;
-        projection = glm::perspective(glm::radians(45.0f), float(width) / float(height), 0.1f, 100.0f);
 
         shaderProgram->setMat4("model", model);
         shaderProgram->setMat4("view", view);
@@ -174,9 +182,36 @@ void render() {
 }
 
 
+float MOVEMENT_SPEED = 0.1f;
+float ROTATE_SPEED = 0.1f;
+
 void processInput() {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    bool up = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
+    bool down = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
+    bool left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
+    bool right = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+
+    if (up || down || left || right) {
+        float x = 0, y = 0;
+        if(up) y += MOVEMENT_SPEED;
+        if(down) y -= MOVEMENT_SPEED;
+        if(right) x += MOVEMENT_SPEED;
+        if(left) x -= MOVEMENT_SPEED;
+        camera->move(x, y);
+    }
+
+    bool turn_left = glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS;
+    bool turn_right = glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS;
+
+    if (turn_left || turn_right) {
+        float angle = 0;
+        if (turn_left) angle -= ROTATE_SPEED;
+        if (turn_right) angle += ROTATE_SPEED;
+        camera->rotate(angle);
+    }
 }
 
 int main() {

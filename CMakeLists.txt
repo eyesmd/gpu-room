@@ -4,7 +4,7 @@ project (graphics-computing)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Target
-add_executable(room src/room.cpp include/glad/glad.c src/error.cpp src/error.h src/room.h include/stb/stb_image.h include/stb/stb_image.c src/entities/Texture.cpp src/entities/Texture.h src/entities/Shader.h)
+add_executable(room src/room.cpp include/glad/glad.c src/error.cpp src/error.h src/room.h include/stb/stb_image.h include/stb/stb_image.c src/entities/Texture.cpp src/entities/Texture.h src/entities/Shader.h src/entities/BasicCamera.cpp src/entities/BasicCamera.h)
 
 # GLFW
 find_package(PkgConfig REQUIRED)
