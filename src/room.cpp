@@ -6,7 +6,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "stb_image.h"
+#include "stb/stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -14,8 +14,8 @@
 #include "room.h"
 #include "error.h"
 
-#include "Texture.h"
-#include "Shader.h"
+#include "entities/Texture.h"
+#include "entities/Shader.h"
 
 GLFWwindow * window;
 
@@ -114,7 +114,7 @@ void setup() {
     glEnable(GL_DEPTH_TEST);
 
     // Shaders
-    shaderProgram = new Shader("./vertex.glsl", "fragment.glsl");
+    shaderProgram = new Shader("vertex.glsl", "fragment.glsl");
 
     // VAO
     setVAO();

@@ -4,18 +4,20 @@
 
 #include <iostream>
 #include "Texture.h"
-#include "stb_image.h"
+#include "stb/stb_image.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <string>
 #include <regex>
-#include "room.h"
+#include "../room.h"
 
 
 Texture::Texture() {}
 
 Texture::Texture(std::string imagePath) {
-    data = stbi_load(imagePath.c_str(), &width, &height, &nrChannels, 0);
+    std::string TEXTURE_ROOT = "textures/";
+
+    data = stbi_load((TEXTURE_ROOT + imagePath).c_str(), &width, &height, &nrChannels, 0);
     if (data == NULL) {
         std::cout << "ERROR::SETUP::TEXTURE_IMAGE_NOT_FOUND" << std::endl;
         glfwSetWindowShouldClose(window, true);

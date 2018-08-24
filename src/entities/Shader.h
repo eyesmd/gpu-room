@@ -11,19 +11,23 @@
 #include <sstream>
 #include <iostream>
 
-#include "room.h"
+#include "../room.h"
 
 class Shader {
+
+    //static std::string SHADER_ROOT;
 
 public:
     unsigned int id;
 
     Shader() {}
 
-    Shader(const char* vertexPath, const char* fragmentPath) {
+    Shader(std::string vertexPath, std::string fragmentPath) {
+        std::string SHADER_ROOT = "shaders/";
+
         // Load shaders
-        unsigned int vertexShader = createShader(GL_VERTEX_SHADER, "VERTEX", "./vertex.glsl");
-        unsigned int fragmentShader = createShader(GL_FRAGMENT_SHADER, "FRAGMENT", "fragment.glsl");
+        unsigned int vertexShader = createShader(GL_VERTEX_SHADER, "VERTEX", (SHADER_ROOT + vertexPath).c_str());
+        unsigned int fragmentShader = createShader(GL_FRAGMENT_SHADER, "FRAGMENT", (SHADER_ROOT + fragmentPath).c_str());
 
         // Shader program
         id = glCreateProgram();
