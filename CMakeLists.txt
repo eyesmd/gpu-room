@@ -10,11 +10,11 @@ add_executable(room src/room.cpp include/glad/glad.c src/error.cpp src/error.h s
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 include_directories(${GLFW_INCLUDE_DIRS})
-target_link_libraries(room ${GLFW_LIBRARIES})
+target_link_libraries(room ${GLFW_LIBRARIES} -ldl)
 
 # Compilation Options
 include_directories(include)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
 

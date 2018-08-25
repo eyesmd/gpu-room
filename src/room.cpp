@@ -128,7 +128,7 @@ void setup() {
     textureSmile -> mapToTexUnit(1);
 
     // Camera
-    camera = new BasicCamera(glm::vec3(0.0f, 0.0f, 5.0f), glm::radians(-90.0f));
+    camera = new BasicCamera(glm::vec3(0.0f, 0.0f, 5.0f), glm::radians(90.0f));
 }
 
 void render() {
